@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>botanique</title>
-  <link rel="stylesheet" href="./public/css/style.css">
+  <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -13,10 +13,10 @@
 
 <header class="header">
   <div class="logo">
-    <img src="./public/images/logo.svg" alt="логотип">
+    <img src="images/logo.svg" alt="логотип">
   </div>
   <div class="user-profile">
-    <img src="./public/images/User.svg" alt="Иконка профиля">
+    <img src="images/User.svg" alt="Иконка профиля">
   </div>
 </header>
 
@@ -30,15 +30,34 @@
   function loadDashboards() {
     fetch('/api/dashboards')
       .then(response => {
-        if (!response.ok) throw new Error('Ошибка загрузки данных');
+        if (!response.ok) throw new Error('API недоступен');
         return response.json();
       })
       .then(data => {
         renderDashboards(data);
       })
       .catch(error => {
-        console.error('Ошибка:', error);
-        window.location.href = '/error.html';
+        console.warn('API недоступен, используем статические данные:', error);
+        
+        fetch('data.json')
+          .then(response => {
+            if (!response.ok) throw new Error('data.json не найден');
+            return response.json();
+          })
+          .then(data => {
+            renderDashboards(data.dashboards);
+          })
+          .catch(err => {
+            console.error('Ошибка загрузки данных:', err);
+            document.getElementById('dashboard-grid').innerHTML = `
+              <div class="error">
+                <p>Не удалось загрузить данные</p>
+                <button onclick="loadDashboards()" style="margin-top: 15px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  Повторить
+                </button>
+              </div>
+            `;
+          });
       });
   }
 
@@ -46,7 +65,7 @@
     const grid = document.getElementById('dashboard-grid');
     
     grid.innerHTML = dashboards.map(item => `
-      <div class="dashboard-card" data-id="${item.id}" data-name="${item.name}" data-status="${item.status}" onclick="goToAnalytics('${item.id}', '${item.name}', '${item.icon}')">
+      <div class="dashboard-card" data-id="${item.id}" data-name="${item.name}" data-status="${item.status}" onclick="goToAnalytics('${item.id}', '${item.name.replace(/'/g, "\\'")}', '${item.icon}', '${item.status}', '${item.value}')">
         <div class="card-header">
           <div class="card-icon">
             ${getIcon(item.icon)}
@@ -58,18 +77,18 @@
             </div>
             <h3 class="card-title">${item.name}</h3>
             <div class="card-value-img">
-              <img src="./public/images/Vector.svg">
+              <img src="images/Vector.svg">
               <div class="card-value">${item.value}</div>
             </div>
           </div>
         </div>
         <div class="card-actions">
           <div class="card-error">
-            <img src="./public/images/error.svg">
+            <img src="images/error.svg">
             <p>0</p>
           </div>
           <div class="card-error">
-            <img src="./public/images/warning.svg">
+            <img src="images/warning.svg">
             <p>0</p>
           </div>
         </div>
@@ -84,7 +103,7 @@
       return `
         <div class="card-status status-busy">
           <span>Занят</span>
-          <img src="./public/images/account.svg">
+          <img src="images/account.svg">
         </div>
       `;
     } else {
@@ -104,7 +123,7 @@
     
     selects.forEach(select => {
       select.addEventListener('change', function() {
-        const id = this.dataset.id;
+        const id = this.closest('[data-id]').dataset.id;
         const newStatus = this.value;
         
         updateStatus(id, newStatus);
@@ -113,42 +132,71 @@
   }
 
   function updateStatus(id, status) {
-    fetch(`/api/dashboards/${id}/status`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status })
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Ошибка обновления статуса');
-      return response.json();
-    })
-    .then(data => {
-      console.log('Статус обновлен:', data);
-      loadDashboards();
-    })
-    .catch(error => {
-      console.error('Ошибка:', error);
-      alert('Не удалось обновить статус');
-    });
+    fetch('/api/dashboards')
+      .then(() => {
+        fetch(`/api/dashboards/${id}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Ошибка обновления статуса');
+          return response.json();
+        })
+        .then(data => {
+          console.log('Статус обновлен:', data);
+          loadDashboards();
+        })
+        .catch(error => {
+          console.error('Ошибка:', error);
+          alert('Не удалось обновить статус');
+        });
+      })
+      .catch(() => {
+        alert('Обновление статуса недоступно в демо-режиме. Запустите проект локально для полной функциональности.');
+        const card = document.querySelector(`.dashboard-card[data-id="${id}"]`);
+        if (newStatus === 'Занят') {
+          card.querySelector('.card-id-status').innerHTML = `
+            <div class="card-id">${id}</div>
+            <div class="card-status status-busy">
+              <span>Занят</span>
+              <img src="images/account.svg">
+            </div>
+          `;
+        } else {
+          card.querySelector('.card-id-status').innerHTML = `
+            <div class="card-id">${id}</div>
+            <div class="custom-select-wrapper" data-id="${id}">
+              <select class="status-select custom-select">
+                <option value="Свободен" selected>Свободен</option>
+                <option value="Занят">Занят</option>
+              </select>
+            </div>
+          `;
+          addStatusEventListeners();
+        }
+      });
   }
 
   function getIcon(iconPath) {
-    return `<img src="${iconPath}" alt="icon" width="40" height="40">`;
+    const cleanPath = iconPath.replace('./public/', '');
+    return `<img src="${cleanPath}" alt="icon" width="40" height="40">`;
   }
   
-    function goToAnalytics(id, name, icon, status, value) {
-    const params = new URLSearchParams();
-    params.append('id', id);
-    params.append('name', name);
-    params.append('icon', icon);
-    params.append('status', status);
-    params.append('value', value);
-
-      window.location.href = `./public/analytics.html?${params.toString()}`;
-    }
-  loadDashboards();
+  function goToAnalytics(id, name, icon, status, value) {
+    const params = new URLSearchParams({
+      id: id,
+      name: name,
+      icon: icon.replace('./public/', ''),
+      status: status,
+      value: value
+    });
+    
+    window.location.href = `analytics.html?${params.toString()}`;
+  }
+  window.addEventListener('DOMContentLoaded', loadDashboards);
 </script>
 
 </body>

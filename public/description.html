@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Описание botanique</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/analytics.css">
+  <link rel="stylesheet" href="css/description.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header">
+  <div class="logo" onclick="goToDashboards()">
+    <img src="images/logo.svg" alt="логотип">
+  </div>
+  <div class="user-profile">
+    <img src="images/User.svg" alt="Иконка профиля">
+  </div>
+</header>
+
+<main class="analytics-container">
+
+  <div class="analytics-header">
+    <div class="header-desc">
+      <div class="header-left">
+        <div class="system-header">
+          <img src="" alt="Иконка оборудования" class="system-icon" id="system-icon">
+          <div class="system-info">
+            <h1 id="system-name" class="system-name"></h1>
+            <div class="system-id" id="system-id"></div>
+          </div>
+        </div>
+      </div>
+      <div class="analytics-actions-btn">
+        <div class="analytics-actions">
+          <select class="status-filter" disabled>
+            <option value="all">Все</option>
+            <option value="free">Свободен</option>
+            <option value="busy">Занят</option>
+          </select>
+        </div>
+        <button class="like-button" disabled><img src="images/favorite.svg" alt=""></button>
+      </div>
+    </div>
+
+    <div class="analytics-tabs nav">
+      <a href="#" class="tab" id="analytics-link">АНАЛИТИКА</a>
+      <a href="#" class="tab active" onclick="event.preventDefault()">ОПИСАНИЕ</a>
+    </div>
+  </div>
+
+  <div class="description-container">
+    <div class="description-block">
+      <div class="description-row">
+        <span class="description-label">ID в ERP (GUID)</span>
+        <span class="description-value" id="erp-id">-</span>
+      </div>
+      <div class="description-row">
+        <span class="description-label">Серийный номер</span>
+        <span class="description-value" id="serial-number">-</span>
+      </div>
+      <div class="description-row">
+        <span class="description-label">ID в паспорте</span>
+        <span class="description-value" id="passport-id">-</span>
+      </div>
+      <div class="description-row">
+        <span class="description-label">EO</span>
+        <span class="description-value" id="eo">-</span>
+      </div>
+    </div>
+
+    <div class="description-block">
+      <div class="description-row">
+        <span class="description-label">Название</span>
+        <span class="description-value" id="equipment-name">-</span>
+      </div>
+      <div class="description-row">
+        <span class="description-label">Класс</span>
+        <span class="description-value" id="class-name">-</span>
+      </div>
+      <div class="description-row">
+        <span class="description-label">Производитель</span>
+        <span class="description-value" id="manufacturer">-</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const dashboardId = urlParams.get('id');
+  const dashboardName = decodeURIComponent(urlParams.get('name') || '');
+  const dashboardIcon = decodeURIComponent(urlParams.get('icon') || '');
+  const dashboardStatus = decodeURIComponent(urlParams.get('status') || '');
+  const dashboardValue = decodeURIComponent(urlParams.get('value') || '');
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (!dashboardId || !dashboardName) {
+      console.error('Отсутствуют параметры объекта. Возврат к дашбордам.');
+      setTimeout(() => {
+        window.location.href = '/error.html';
+      }, 1500);
+      return;
+    }
+    
+    renderHeader(dashboardId, dashboardName, dashboardIcon, dashboardStatus, dashboardValue);
+    
+    loadDescriptionData(dashboardId);
+    
+    setupNavigation();
+  });
+
+  function renderHeader(id, name, icon, status, value) {
+    document.getElementById('system-name').textContent = name;
+    document.getElementById('system-id').textContent = `ID: ${id}`;
+    document.getElementById('system-icon').src = icon || 'images/default.svg';
+  }
+
+  function loadDescriptionData(id) {
+    fetch(`/api/analytics/${id}`)
+      .then(response => {
+        if (!response.ok) throw new Error('Ошибка загрузки данных');
+        return response.json();
+      })
+      .then(data => {
+        renderDescription(data);
+      })
+      .catch(error => {
+        console.error('Ошибка:', error);
+        window.location.href = '/error.html';
+      });
+  }
+
+  function renderDescription(data) {
+    document.getElementById('erp-id').textContent = data.erpId || 'Не указан';
+    document.getElementById('serial-number').textContent = data.serialNumber || 'Не указан';
+    document.getElementById('passport-id').textContent = data.passportId || 'Не указан';
+    document.getElementById('eo').textContent = data.eo || 'Не указан';
+    document.getElementById('equipment-name').textContent = data.name || 'Не указано';
+    document.getElementById('class-name').textContent = data.className || 'Не указан';
+    document.getElementById('manufacturer').textContent = data.manufacturer || 'Не указан';
+  }
+
+  function setupNavigation() {
+    const analyticsLink = document.getElementById('analytics-link');
+    if (analyticsLink) {
+      analyticsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const params = new URLSearchParams({
+          id: dashboardId,
+          name: dashboardName,
+          icon: dashboardIcon,
+          status: dashboardStatus,
+          value: dashboardValue
+        });
+        
+        window.location.href = `/analytics.html?${params.toString()}`;
+      });
+    }
+  }
+
+  function goToDashboards() {
+    window.location.href = '/index.html';
+  }
+</script>
+
+</body>
+</html>

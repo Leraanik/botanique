@@ -135,7 +135,7 @@ body{
 }
 
 .custom-select-wrapper::before {
-  content: url('/images/expand.svg');
+  content: url('../images/expand.svg');
   position: absolute;
   left: 4px;
   top: 60%;

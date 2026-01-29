@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '..')));
 
 let dashboards = [
   {
@@ -12,7 +13,7 @@ let dashboards = [
     name: "Рециркуляционная вентиляция, Trox, xcube, Приточно-рециркуляционная установка 2С-ПР10.1",
     status: "Свободен",
     value: "101",
-    icon: "/images/ventilation.svg",
+    icon: "./public/images/ventilation.svg",
     erpId: "68acdb6m-97a2-12e9-13d5-00165ff08700",
     serialNumber: "12345678",
     passportId: "86154",
@@ -25,7 +26,7 @@ let dashboards = [
     name: "Осмометр Киви Осмометрия ОСКР-1М",
     status: "Занят",
     value: "2.5.03/2",
-    icon: "/images/osmometer.svg",
+    icon: "./public/images/osmometer.svg",
     erpId: "88ee3b2d-67c4-90e8-11b7-11888bb87621",
     serialNumber: "00123455",
     passportId: "58975",
@@ -38,7 +39,7 @@ let dashboards = [
     name: "Рециркуляционная вентиляция, Trox, xcube, Приточно-рециркуляционная установка 2С-ПР10.1",
     status: "Свободен",
     value: "101",
-    icon: "/images/ventilation.svg",
+    icon: "./public/images/ventilation.svg",
     erpId: "68acdb6m-97a2-12e9-13d5-00165ff08700",
     serialNumber: "12345678",
     passportId: "86154",
@@ -51,7 +52,7 @@ let dashboards = [
     name: "Система щелочи, Watertown, NaOH",
     status: "Свободен",
     value: "2.5.03/2",
-    icon: "/images/alkali.svg",
+    icon: "./public/images/alkali.svg",
     erpId: "28fedb4b-85a1-11e8-80e5-00155df02900",
     serialNumber: "37767108",
     passportId: "18941",
@@ -64,7 +65,7 @@ let dashboards = [
     name: "Осмометр Киви Осмометрия ОСКР-1М",
     status: "Занят",
     value: "2.5.03/2",
-    icon: "/images/osmometer.svg",
+    icon: "./public/images/osmometer.svg",
     erpId: "88ee3b2d-67c4-90e8-11b7-11888bb87621",
     serialNumber: "00123455",
     passportId: "58975",
@@ -77,7 +78,7 @@ let dashboards = [
     name: "Осмометр Киви Осмометрия ОСКР-1М",
     status: "Занят",
     value: "101",
-    icon: "/images/osmometer.svg",
+    icon: "./public/images/osmometer.svg",
     erpId: "88ee3b2d-67c4-90e8-11b7-11888bb87621",
     serialNumber: "00123455",
     passportId: "58975",
@@ -90,7 +91,7 @@ let dashboards = [
     name: "Бокс биологической безопасности",
     status: "Занят",
     value: "507",
-    icon: "/images/chromatography.svg",
+    icon: "./public/images/chromatography.svg",
     erpId: "77ffsa7s-78g5-89p9-00a6-00999aa98710",
     serialNumber: "87654321",
     passportId: "00254",
@@ -103,7 +104,7 @@ let dashboards = [
     name: "Рециркуляционная вентиляция, Trox, xcube, Приточно-рециркуляционная установка 2С-ПР10.1",
     status: "Свободен",
     value: "010",
-    icon: "/images/ventilation.svg",
+    icon: "./public/images/ventilation.svg",
     erpId: "68acdb6m-97a2-12e9-13d5-00165ff08700",
     serialNumber: "12345678",
     passportId: "86154",

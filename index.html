@@ -1,24 +1,155 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/dashboards.html">
-    <title>botanique</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>botanique</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Загрузка...</h1>
-    <p>Перенаправление на главную страницу...</p>
-    <script>
-        setTimeout(function() {
-            window.location.href = '/dashboards.html';
-        }, 100);
-    </script>
+
+<header class="header">
+  <div class="logo">
+    <img src="images/logo.svg" alt="логотип">
+  </div>
+  <div class="user-profile">
+    <img src="images/User.svg" alt="Иконка профиля">
+  </div>
+</header>
+
+<main class="main dashboard-container">
+  <div class="dashboard-grid" id="dashboard-grid">
+    <div class="loading">Загрузка данных...</div>
+  </div>
+</main>
+
+<script>
+  function loadDashboards() {
+    fetch('/api/dashboards')
+      .then(response => {
+        if (!response.ok) throw new Error('Ошибка загрузки данных');
+        return response.json();
+      })
+      .then(data => {
+        renderDashboards(data);
+      })
+      .catch(error => {
+        console.error('Ошибка:', error);
+        window.location.href = '/error.html';
+      });
+  }
+
+  function renderDashboards(dashboards) {
+    const grid = document.getElementById('dashboard-grid');
+    
+    grid.innerHTML = dashboards.map(item => `
+      <div class="dashboard-card" data-id="${item.id}" data-name="${item.name}" data-status="${item.status}" onclick="goToAnalytics('${item.id}', '${item.name}', '${item.icon}')">
+        <div class="card-header">
+          <div class="card-icon">
+            ${getIcon(item.icon)}
+          </div>
+          <div class='card-descr'>
+            <div class="card-id-status">
+              <div class="card-id">${item.id}</div>
+              ${getStatusElement(item.status, item.id)}
+            </div>
+            <h3 class="card-title">${item.name}</h3>
+            <div class="card-value-img">
+              <img src="images/Vector.svg">
+              <div class="card-value">${item.value}</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <div class="card-error">
+            <img src="images/error.svg">
+            <p>0</p>
+          </div>
+          <div class="card-error">
+            <img src="images/warning.svg">
+            <p>0</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    
+    addStatusEventListeners();
+  }
+
+  function getStatusElement(status, id) {
+    if (status === 'Занят') {
+      return `
+        <div class="card-status status-busy">
+          <span>Занят</span>
+          <img src="images/account.svg">
+        </div>
+      `;
+    } else {
+      return `
+      <div class="custom-select-wrapper" data-id="${id}">
+        <select class="status-select custom-select">
+          <option value="Свободен" selected>Свободен</option>
+          <option value="Занят">Занят</option>
+        </select>
+      </div>
+      `;
+    }
+  }
+
+  function addStatusEventListeners() {
+    const selects = document.querySelectorAll('.status-select');
+    
+    selects.forEach(select => {
+      select.addEventListener('change', function() {
+        const id = this.dataset.id;
+        const newStatus = this.value;
+        
+        updateStatus(id, newStatus);
+      });
+    });
+  }
+
+  function updateStatus(id, status) {
+    fetch(`/api/dashboards/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Ошибка обновления статуса');
+      return response.json();
+    })
+    .then(data => {
+      console.log('Статус обновлен:', data);
+      loadDashboards();
+    })
+    .catch(error => {
+      console.error('Ошибка:', error);
+      alert('Не удалось обновить статус');
+    });
+  }
+
+  function getIcon(iconPath) {
+    return `<img src="${iconPath}" alt="icon" width="40" height="40">`;
+  }
+  
+    function goToAnalytics(id, name, icon, status, value) {
+    const params = new URLSearchParams();
+    params.append('id', id);
+    params.append('name', name);
+    params.append('icon', icon);
+    params.append('status', status);
+    params.append('value', value);
+
+      window.location.href = `/analytics.html?${params.toString()}`;
+    }
+  loadDashboards();
+</script>
+
 </body>
 </html>
